@@ -1,0 +1,6 @@
+{
+  "name": "NOIR Luxury",
+  "description": "Simulated digital gratification luxury shopping platform with Sapolsky dopamine rewards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
