@@ -206,7 +206,7 @@ class LuxuryViewModel(application: Application) : AndroidViewModel(application) 
                         deliveryAddress = address,
                         pointsAwarded = outcome.gemsEarned,
                         itemsSummary = currentCart.joinToString(", ") { "${it.title} (x${it.quantity})" },
-                        currentStep = "Rider Assigned (Bandra West)"
+                        currentStep = "Order Dispatched from Delhi Hub"
                     )
                     orderDao.insertOrder(orderEntity)
                     userProfileDao.addGemsAndSavings(

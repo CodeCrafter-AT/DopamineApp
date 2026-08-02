@@ -25,7 +25,7 @@ data class OrderEntity(
     val deliveryAddress: String,
     val pointsAwarded: Int,
     val itemsSummary: String,
-    val currentStep: String = "Rider Assigned" // "Rider Assigned", "In Transit", "Delivered"
+    val currentStep: String = "Order Dispatched from Delhi Hub"
 )
 
 @Entity(tableName = "user_profile")
