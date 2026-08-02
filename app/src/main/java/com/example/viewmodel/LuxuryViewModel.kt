@@ -206,14 +206,16 @@ class LuxuryViewModel(application: Application) : AndroidViewModel(application) 
                         deliveryAddress = address,
                         pointsAwarded = outcome.gemsEarned,
                         itemsSummary = currentCart.joinToString(", ") { "${it.title} (x${it.quantity})" },
-                        currentStep = "Rider Assigned (Bandra West)"
+                        currentStep = "Order Placed"
                     )
                     orderDao.insertOrder(orderEntity)
-                    userProfileDao.addGemsAndSavings(
-                        gemsToAdd = outcome.gemsEarned,
-                        savingsToAdd = outcome.totalAmountINR
+
+                    // Trigger the OrderEngine to handle status progression and reward allocation
+                    com.example.engine.OrderEngine.processOrder(
+                        order = orderEntity,
+                        orderDao = orderDao,
+                        userProfileDao = userProfileDao
                     )
-                    userProfileDao.incrementStreak()
                     cartDao.clearCart()
                 }
                 is SapolskyOutcome.Rejected -> {
