@@ -77,10 +77,10 @@ import com.example.ui.theme.NoirTheme
 import com.example.viewmodel.LuxuryViewModel
 
 enum class NavigationTab(val label: String, val activeIcon: ImageVector, val inactiveIcon: ImageVector) {
-    HOME("Home", Icons.Filled.Home, Icons.Outlined.Home),
-    DISCOVER("Discover", Icons.Filled.Search, Icons.Outlined.Search),
-    REWARDS("Rewards", Icons.Filled.AutoAwesome, Icons.Outlined.AutoAwesome),
-    ORDERS("Orders", Icons.Filled.LocalShipping, Icons.Outlined.LocalShipping),
+    FEED("Feed", Icons.Filled.Home, Icons.Outlined.Home),
+
+    VAULT("Vault", Icons.Filled.AutoAwesome, Icons.Outlined.AutoAwesome),
+
     PROFILE("Profile", Icons.Filled.Person, Icons.Outlined.Person)
 }
 
@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
                 val isLoggedIn by viewModel.isLoggedIn.collectAsState()
                 val showUpgradePrompt by viewModel.showUpgradePrompt.collectAsState()
 
-                var currentTab by remember { mutableStateOf(NavigationTab.HOME) }
+                var currentTab by remember { mutableStateOf(NavigationTab.FEED) }
                 val haptic = LocalHapticFeedback.current
 
                 Scaffold(
@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Crossfade(targetState = currentTab, label = "TabSwitch") { tab ->
                             when (tab) {
-                                NavigationTab.HOME -> {
+                                NavigationTab.FEED -> {
                                     CatalogScreen(
                                         products = viewModel.getFilteredProducts(),
                                         selectedCategory = selectedCategory,
@@ -157,30 +157,14 @@ class MainActivity : ComponentActivity() {
                                         onSelectProduct = { viewModel.selectProduct(it) },
                                         onToggleFavorite = { viewModel.toggleFavorite(it) },
                                         onQuickAdd = { viewModel.addToCart(it, it.sizes.firstOrNull() ?: "One Size") },
-                                        onOpenTracking = { currentTab = NavigationTab.ORDERS }
+                                        onOpenTracking = { currentTab = NavigationTab.VAULT }
                                     )
                                 }
-                                NavigationTab.DISCOVER -> {
-                                    DiscoverScreen(
-                                        products = viewModel.getFilteredProducts(),
-                                        selectedCategory = selectedCategory,
-                                        onSelectCategory = { viewModel.selectCategory(it) },
-                                        searchQuery = searchQuery,
-                                        onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                                        favoriteIds = favoriteIds,
-                                        onToggleFavorite = { viewModel.toggleFavorite(it) },
-                                        onProductClick = { viewModel.selectProduct(it) },
-                                        onQuickAdd = { viewModel.addToCart(it, it.sizes.firstOrNull() ?: "One Size") }
-                                    )
-                                }
-                                NavigationTab.REWARDS -> {
+                                NavigationTab.VAULT -> {
                                     VipVaultScreen(
                                         profile = userProfile,
                                         onOpenAuth = { viewModel.toggleAuthModal() }
                                     )
-                                }
-                                NavigationTab.ORDERS -> {
-                                    LiveTrackingScreen(orders = orders)
                                 }
                                 NavigationTab.PROFILE -> {
                                     BagScreen(
@@ -229,7 +213,7 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { viewModel.dismissSapolskyOutcome() },
                                 onViewLiveTracking = {
                                     viewModel.dismissSapolskyOutcome()
-                                    currentTab = NavigationTab.ORDERS
+                                    currentTab = NavigationTab.VAULT
                                 }
                             )
                         }
