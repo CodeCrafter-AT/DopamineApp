@@ -315,7 +315,7 @@ fun ProductVectorCanvas(category: String) {
 }
 
 fun formatINR(amount: Long): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val formatter = NumberFormat.getCurrencyInstance(java.util.Locale.Builder().setLanguage("en").setRegion("IN").build())
     formatter.maximumFractionDigits = 0
     return formatter.format(amount)
 }
