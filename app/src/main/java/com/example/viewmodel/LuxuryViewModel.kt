@@ -190,6 +190,8 @@ class LuxuryViewModel(application: Application) : AndroidViewModel(application) 
             val address = userProfile.value?.let { "${it.addressStreet}, ${it.addressCity}" }
                 ?: "Bandra West, Mumbai, Maharashtra"
 
+            val maskedAddress = com.example.engine.DPDPPrivacyMiddleware.coarsenLocation(address)
+
             val outcome = SapolskyEngine.evaluateCheckout(
                 totalAmountINR = totalAmount,
                 itemCount = currentCart.sumOf { it.quantity }
@@ -203,7 +205,7 @@ class LuxuryViewModel(application: Application) : AndroidViewModel(application) 
                         totalAmountINR = outcome.totalAmountINR,
                         itemCount = currentCart.sumOf { it.quantity },
                         sapolskyStatus = "SUCCESS",
-                        deliveryAddress = address,
+                        deliveryAddress = maskedAddress,
                         pointsAwarded = outcome.gemsEarned,
                         itemsSummary = currentCart.joinToString(", ") { "${it.title} (x${it.quantity})" },
                         currentStep = "Rider Assigned (Bandra West)"
@@ -222,7 +224,7 @@ class LuxuryViewModel(application: Application) : AndroidViewModel(application) 
                         totalAmountINR = outcome.totalAmountINR,
                         itemCount = currentCart.sumOf { it.quantity },
                         sapolskyStatus = "OUT_OF_STOCK",
-                        deliveryAddress = address,
+                        deliveryAddress = maskedAddress,
                         pointsAwarded = outcome.gemsEarned,
                         itemsSummary = currentCart.joinToString(", ") { "${it.title} (x${it.quantity})" },
                         currentStep = "Order Refunded / Out of Stock"
