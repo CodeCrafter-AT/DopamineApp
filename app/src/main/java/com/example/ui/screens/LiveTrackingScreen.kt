@@ -467,12 +467,12 @@ fun CourierRouteMapCanvas() {
             lineTo(p3.x, p3.y)
         }
 
-        drawPath(path = path, color = Color(0xFF6B7280), style = stroke)
+        drawPath(path = path, color = com.example.ui.theme.TextSecondary, style = stroke)
 
         // Draw node circles
-        drawCircle(color = Color(0xFF111111), radius = 8f, center = p1)
-        drawCircle(color = Color(0xFF7C3AED), radius = 12f, center = p2)
-        drawCircle(color = Color(0xFF111111), radius = 8f, center = p3)
+        drawCircle(color = com.example.ui.theme.NoirBlack, radius = 8f, center = p1)
+        drawCircle(color = com.example.ui.theme.AccentPurple, radius = 12f, center = p2)
+        drawCircle(color = com.example.ui.theme.NoirBlack, radius = 8f, center = p3)
     }
 }
 
