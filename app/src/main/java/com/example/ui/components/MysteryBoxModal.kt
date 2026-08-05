@@ -148,7 +148,10 @@ fun MysteryBoxModal(
                     }
 
                     IconButton(
-                        onClick = onDismiss,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onDismiss()
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
