@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +51,7 @@ fun LuxuryHeader(
     onOpenBag: () -> Unit
 ) {
     val isDark = MaterialTheme.colorScheme.background == NoirBlack
+    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
@@ -69,7 +72,10 @@ fun LuxuryHeader(
                         width = 2.dp,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    .clickable { onOpenAuth() }
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onOpenAuth()
+                    }
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
@@ -135,7 +141,10 @@ fun LuxuryHeader(
                             color = MaterialTheme.colorScheme.outline,
                             shape = CircleShape
                         )
-                        .clickable { onOpenBag() }
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onOpenBag()
+                        }
                         .testTag("header_cart_button"),
                     contentAlignment = Alignment.Center
                 ) {
@@ -178,7 +187,10 @@ fun LuxuryHeader(
                             color = MaterialTheme.colorScheme.onBackground,
                             shape = CircleShape
                         )
-                        .clickable { onOpenAuth() }
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onOpenAuth()
+                        }
                         .testTag("header_auth_button"),
                     contentAlignment = Alignment.Center
                 ) {

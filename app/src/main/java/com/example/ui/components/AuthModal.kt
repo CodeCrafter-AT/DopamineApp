@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Badge
@@ -72,6 +74,7 @@ fun AuthModal(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .verticalScroll(rememberScrollState())
                 .testTag("auth_modal")
         ) {
             Row(
@@ -87,7 +90,10 @@ fun AuthModal(
                         letterSpacing = 2.sp
                     )
                 )
-                IconButton(onClick = onDismiss) {
+                IconButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDismiss()
+                }) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
                 }
             }
