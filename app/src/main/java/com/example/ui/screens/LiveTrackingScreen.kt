@@ -153,16 +153,30 @@ fun LiveTrackingScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "ORDER ID: ${activeOrder.orderId}",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            letterSpacing = 0.5.sp
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "ORDER ID: ${activeOrder.orderId}",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                letterSpacing = 0.5.sp
+                            )
                         )
-                    )
+                        Text(
+                            text = "Delivered in 2–3 Business Days",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 10.sp,
+                                color = AccentPurple
+                            )
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
                         text = "Destination: ${activeOrder.deliveryAddress}",
@@ -188,6 +202,34 @@ fun LiveTrackingScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     TrackingTimelineView(currentStep = activeOrder.currentStep)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Ad/Monetization Placeholder
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Advertisement Space",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                        )
+                    }
                 }
             } else {
                 // Standby Card
@@ -370,21 +412,19 @@ fun LiveTrackingScreen(
 @Composable
 fun TrackingTimelineView(currentStep: String) {
     val steps = listOf(
-        "Packed" to Icons.Default.Inventory2,
-        "Warehouse" to Icons.Default.Warehouse,
-        "On The Way" to Icons.Default.LocalShipping,
-        "Nearby" to Icons.Default.NearMe,
+        "Order Dispatched from Delhi Hub" to Icons.Default.Inventory2,
+        "Arrived at Regional Sorting Facility" to Icons.Default.Warehouse,
+        "Out for Delivery" to Icons.Default.LocalShipping,
         "Delivered" to Icons.Default.LocationOn
     )
 
     // Index calculation
-    val currentStepIndex = when (currentStep.lowercase()) {
-        "packed" -> 0
-        "warehouse" -> 1
-        "on the way" -> 2
-        "nearby" -> 3
-        "delivered" -> 4
-        else -> 2
+    val currentStepIndex = when {
+        currentStep.lowercase().contains("dispatched") -> 0
+        currentStep.lowercase().contains("sorting") -> 1
+        currentStep.lowercase().contains("out for delivery") -> 2
+        currentStep.lowercase().contains("delivered") -> 3
+        else -> 0
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
