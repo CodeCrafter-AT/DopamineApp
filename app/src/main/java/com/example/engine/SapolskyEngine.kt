@@ -22,10 +22,16 @@ sealed class SapolskyOutcome {
     ) : SapolskyOutcome()
 }
 
+data class SapolskyConfig(
+    val successProbability: Float = 0.5f
+)
+
 object SapolskyEngine {
 
+    var config = SapolskyConfig()
+
     /**
-     * Evaluates a checkout attempt using Robert Sapolsky's 50/50 variable reward probability.
+     * Evaluates a checkout attempt using Robert Sapolsky's variable reward probability.
      * Generates maximum dopamine by balancing anticipatory excitement and Reward Prediction Error (RPE).
      */
     fun evaluateCheckout(
@@ -34,7 +40,7 @@ object SapolskyEngine {
         forceOutcome: Boolean? = null // For testing or user override if desired
     ): SapolskyOutcome {
         val randomRoll = Random.nextFloat() // 0.0 to 1.0
-        val isSuccess = forceOutcome ?: (randomRoll >= 0.5f)
+        val isSuccess = forceOutcome ?: (randomRoll <= config.successProbability)
 
         val orderId = "NOIR-" + (100000..999999).random().toString()
         val baseGems = 250 + (totalAmountINR / 25000).toInt().coerceAtMost(2500)

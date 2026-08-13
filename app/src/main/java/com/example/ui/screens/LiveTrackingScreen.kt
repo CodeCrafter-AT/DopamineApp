@@ -370,21 +370,19 @@ fun LiveTrackingScreen(
 @Composable
 fun TrackingTimelineView(currentStep: String) {
     val steps = listOf(
-        "Packed" to Icons.Default.Inventory2,
-        "Warehouse" to Icons.Default.Warehouse,
-        "On The Way" to Icons.Default.LocalShipping,
-        "Nearby" to Icons.Default.NearMe,
+        "Order Placed" to Icons.Default.Inventory2,
+        "Processing" to Icons.Default.Warehouse,
+        "Shipped" to Icons.Default.LocalShipping,
         "Delivered" to Icons.Default.LocationOn
     )
 
     // Index calculation
     val currentStepIndex = when (currentStep.lowercase()) {
-        "packed" -> 0
-        "warehouse" -> 1
-        "on the way" -> 2
-        "nearby" -> 3
-        "delivered" -> 4
-        else -> 2
+        "order placed" -> 0
+        "processing" -> 1
+        "shipped" -> 2
+        "delivered" -> 3
+        else -> 0
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
