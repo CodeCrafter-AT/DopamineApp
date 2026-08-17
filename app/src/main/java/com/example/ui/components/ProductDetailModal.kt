@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -124,7 +127,16 @@ fun ProductDetailModal(
                         shape = RoundedCornerShape(20.dp)
                     )
             ) {
-                ProductVectorCanvas(category = product.category)
+                if (product.imageUrl != null) {
+                    AsyncImage(
+                        model = product.imageUrl,
+                        contentDescription = product.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    ProductVectorCanvas(category = product.category)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -142,13 +154,21 @@ fun ProductDetailModal(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Price tag in INR
-            Text(
-                text = formatINR(product.priceInINR),
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+            Column {
+                Text(
+                    text = formatINR(product.priceInINR),
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
                 )
-            )
+                Text(
+                    text = "or 3 months EMI of ${formatINR(product.priceInINR / 3)}",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -279,7 +299,7 @@ fun ProductDetailModal(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "ADD TO CART • ${formatINR(product.priceInINR)} →",
+                        text = "SIMULATE PURCHASE • ${formatINR(product.priceInINR)} →",
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold,
