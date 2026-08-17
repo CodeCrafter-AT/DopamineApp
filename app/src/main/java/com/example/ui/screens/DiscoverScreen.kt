@@ -65,7 +65,7 @@ fun DiscoverScreen(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val popularTags = listOf("Shoes", "Jackets", "Shorts", "Perfumes", "Bags", "Watches", "Moncler", "Balenciaga", "Prada")
+    val popularTags = listOf("Folex", "Ghumato", "ZeptOut", "Perfumes", "Bags", "Hype Drops", "Men's", "Women's", "Kids")
 
     Column(
         modifier = Modifier
