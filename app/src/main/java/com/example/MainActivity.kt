@@ -17,6 +17,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.geometry.Offset
+
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -340,73 +345,81 @@ fun LuxuryBottomNavigationBar(
     cartCount: Int,
     onTabSelected: (NavigationTab) -> Unit
 ) {
-    Box(
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
+            .height(58.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(bottom = 8.dp)
+            .drawBehind {
+                drawLine(
+                    color = com.example.ui.theme.BorderHairline,
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(size.width, 0f),
+                    strokeWidth = 1f
+                )
+            },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(24.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(24.dp)
-                )
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavigationTab.values().forEach { tab ->
-                val isSelected = currentTab == tab
+        val tabs = listOf(
+            NavigationTab.HOME to "HOME",
+            NavigationTab.DISCOVER to "MENU",
+            NavigationTab.REWARDS to "NEW",
+            NavigationTab.ORDERS to "STORES",
+            NavigationTab.PROFILE to "BAG" // Mapping PROFILE to BAG for the sake of 5-tabs mock
+        )
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .background(
-                            color = if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent,
-                            shape = CircleShape
-                        )
-                        .clickable { onTabSelected(tab) }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .testTag("tab_${tab.name.lowercase()}")
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                            contentDescription = tab.label,
-                            modifier = Modifier.size(20.dp),
-                            tint = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
+        tabs.forEach { (tab, label) ->
+            val isActive = currentTab == tab
+            val icon = if(label == "BAG") Icons.Outlined.ShoppingBag else tab.inactiveIcon
+            val color = if (isActive) com.example.ui.theme.TextPrimary else com.example.ui.theme.TextTabInactive
+            val weight = if (isActive) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium
 
-                        if (tab == NavigationTab.PROFILE && cartCount > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .size(8.dp)
-                                    .background(com.example.ui.theme.AccentPurple, CircleShape)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onTabSelected(tab)
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = color,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    if (label == "BAG" && cartCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 10.dp, y = (-4).dp)
+                                .size(16.dp)
+                                .background(color = com.example.ui.theme.TextPrimary, shape = androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = cartCount.toString(),
+                                color = MaterialTheme.colorScheme.background,
+                                fontSize = 9.sp,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = tab.label,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 9.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            letterSpacing = 0.5.sp,
-                            color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                    )
                 }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = color,
+                        fontWeight = weight,
+                        fontSize = 9.sp
+                    )
+                )
             }
         }
     }

@@ -467,7 +467,7 @@ fun CourierRouteMapCanvas() {
             lineTo(p3.x, p3.y)
         }
 
-        drawPath(path = path, color = com.example.ui.theme.TextSecondary, style = stroke)
+        drawPath(path = path, color = com.example.ui.theme.TextMuted, style = stroke)
 
         // Draw node circles
         drawCircle(color = com.example.ui.theme.NoirBlack, radius = 8f, center = p1)
