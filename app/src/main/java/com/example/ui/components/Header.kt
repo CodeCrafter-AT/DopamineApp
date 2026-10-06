@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.ShoppingBag
@@ -48,93 +52,75 @@ fun LuxuryHeader(
     onOpenAuth: () -> Unit,
     onOpenBag: () -> Unit
 ) {
-    val isDark = MaterialTheme.colorScheme.background == NoirBlack
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp)
+                .background(com.example.ui.theme.BgDarkTicker),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "DROPZERO IS BETTER ON THE APP | EXTRA 10% OFF | CODE: APP10",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = com.example.ui.theme.TextInverse,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.08.sp
+                ),
+                maxLines = 1
+            )
+        }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 12.dp)
-            .testTag("luxury_header")
-    ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .background(com.example.ui.theme.BgHeaderSticky)
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Top Left: Sleek AURA/NOIR Italic Boxed Brand Badge
-            Box(
-                modifier = Modifier
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    .clickable { onOpenAuth() }
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "AURA",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = FontFamily.SansSerif,
-                        fontWeight = FontWeight.Black,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                        letterSpacing = (-1).sp,
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                )
-            }
+            // Hamburger
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Open menu",
+                tint = com.example.ui.theme.TextPrimary,
+                modifier = Modifier.size(20.dp).clickable { /* TODO: Open drawer */ }
+            )
 
-            // Right side controls: Gems Badge, Cart icon, Auth profile button
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Center Wordmark
+            Text(
+                text = "DROPZERO",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontSize = 20.sp,
+                    color = com.example.ui.theme.TextPrimary
+                ),
+                modifier = Modifier.testTag("header_logo")
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Right Utilities: Search, Wishlist, Bag
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Gems / Dopamine meter badge
-                Row(
-                    modifier = Modifier
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = "Gems",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "VIP PASS",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp,
-                            fontSize = 10.sp
-                        )
-                    )
-                }
-
-                // Cart / Bag quick icon
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = com.example.ui.theme.TextPrimary,
+                    modifier = Modifier.size(20.dp).clickable {  }
+                )
+                Icon(
+                    imageVector = Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Wishlist",
+                    tint = com.example.ui.theme.TextPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        )
                         .clickable { onOpenBag() }
                         .testTag("header_cart_button"),
                     contentAlignment = Alignment.Center
@@ -142,61 +128,33 @@ fun LuxuryHeader(
                     Icon(
                         imageVector = Icons.Outlined.ShoppingBag,
                         contentDescription = "Bag",
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
+                        tint = com.example.ui.theme.TextPrimary,
+                        modifier = Modifier.size(20.dp)
                     )
                     if (cartCount > 0) {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
+                                .offset(x = 6.dp, y = (-4).dp)
                                 .size(16.dp)
-                                .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                .background(com.example.ui.theme.TextPrimary, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = cartCount.toString(),
-                                style = TextStyleDefault(
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                color = com.example.ui.theme.BgPrimary,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
-
-                // Sleek Auth Profile Button Badge
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.5.dp,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            shape = CircleShape
-                        )
-                        .clickable { onOpenAuth() }
-                        .testTag("header_auth_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "VIP",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    )
-                }
             }
         }
+
+        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(com.example.ui.theme.BorderHairline))
     }
 }
-
 @Composable
 private fun TextStyleDefault(color: Color, fontSize: androidx.compose.ui.unit.TextUnit, fontWeight: FontWeight): androidx.compose.ui.text.TextStyle {
     return androidx.compose.ui.text.TextStyle(

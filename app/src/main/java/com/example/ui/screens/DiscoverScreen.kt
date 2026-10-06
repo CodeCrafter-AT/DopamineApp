@@ -151,7 +151,7 @@ fun DiscoverScreen(
                     modifier = Modifier
                         .background(
                             color = if (searchQuery.equals(tag, ignoreCase = true)) NoirBlack else MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
+                            shape = RoundedCornerShape(20.dp)
                         )
                         .clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)

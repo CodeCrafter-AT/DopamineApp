@@ -249,12 +249,12 @@ fun CatalogScreen(
                         modifier = Modifier
                             .background(
                                 color = if (isSelected) NoirBlack else MaterialTheme.colorScheme.surface,
-                                shape = CircleShape
+                                shape = RoundedCornerShape(20.dp)
                             )
                             .border(
                                 width = 1.dp,
                                 color = if (isSelected) NoirBlack else MaterialTheme.colorScheme.outline,
-                                shape = CircleShape
+                                shape = RoundedCornerShape(20.dp)
                             )
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
