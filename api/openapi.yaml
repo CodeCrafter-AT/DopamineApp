@@ -1,0 +1,1908 @@
+openapi: 3.0.3
+info:
+  title: DropZero API
+  version: 1.0.0
+  description: |
+    Backend API for DropZero - An Android shopping app selling limited drops in India with UPI payments, order tracking, and a rewards Vault.
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+paths:
+  /health:
+    get:
+      summary: Server health check (root)
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                timestamp: "2026-10-21T17:00:00.000Z"
+                uptime: 123.45
+
+  /v1/health:
+    get:
+      summary: Server health check (v1)
+      operationId: getHealthV1
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                timestamp: "2026-10-21T17:00:00.000Z"
+                uptime: 123.45
+
+  /v1/time:
+    get:
+      summary: Get current server time
+      description: Returns the official UTC server timestamp used for drop start/end calculations and order timing.
+      operationId: getServerTime
+      responses:
+        '200':
+          description: Server timestamp
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - serverTime
+                properties:
+                  serverTime:
+                    type: string
+                    format: date-time
+                    example: "2026-10-21T17:00:00.000Z"
+
+  /v1/config:
+    get:
+      summary: Get app configuration and feature flags
+      operationId: getConfig
+      responses:
+        '200':
+          description: Global configuration and feature flags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+
+  /v1/auth/otp/request:
+    post:
+      summary: Request phone OTP
+      operationId: requestOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+91[0-9]{10}$'
+                  example: "+919876543210"
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - expiresAt
+                  - resendCooldownSeconds
+                properties:
+                  message:
+                    type: string
+                    example: "OTP sent successfully"
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    example: "2026-10-21T17:05:00.000Z"
+                  resendCooldownSeconds:
+                    type: integer
+                    example: 30
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/auth/otp/verify:
+    post:
+      summary: Verify phone OTP
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - code
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+91[0-9]{10}$'
+                  example: "+919876543210"
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  example: "123456"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/auth/logout:
+    post:
+      summary: Logout user
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/me:
+    get:
+      summary: Get user profile
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      summary: Update user profile
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Aarav Sharma"
+                email:
+                  type: string
+                  format: email
+                  example: "aarav@example.com"
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      summary: Delete account
+      operationId: deleteAccount
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Account marked for deletion
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - scheduledPurgeAt
+                properties:
+                  message:
+                    type: string
+                    example: "Account scheduled for deletion according to privacy retention policy."
+                  scheduledPurgeAt:
+                    type: string
+                    format: date-time
+                    example: "2026-11-20T17:00:00.000Z"
+
+  /v1/me/consents:
+    post:
+      summary: Record privacy consent
+      operationId: recordConsent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - purpose
+                - version
+                - granted
+              properties:
+                purpose:
+                  type: string
+                  example: "DPDP_LOCATION_COARSENING"
+                version:
+                  type: string
+                  example: "v1.0"
+                granted:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Consent status recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/devices:
+    put:
+      summary: Register/update device push token
+      operationId: updateDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fcmToken
+                - platform
+              properties:
+                fcmToken:
+                  type: string
+                  example: "fcm_token_sample_12345"
+                platform:
+                  type: string
+                  enum: [ANDROID, IOS]
+                  example: "ANDROID"
+                deviceModel:
+                  type: string
+                  example: "Pixel 8 Pro"
+      responses:
+        '200':
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/home:
+    get:
+      summary: Get home feed curated content
+      operationId: getHomeFeed
+      responses:
+        '200':
+          description: Home feed data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - activeDrop
+                  - upcomingDrops
+                  - featuredCategories
+                  - trendingProducts
+                properties:
+                  activeDrop:
+                    $ref: '#/components/schemas/Drop'
+                  upcomingDrops:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Drop'
+                  featuredCategories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+                  trendingProducts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /v1/products:
+    get:
+      summary: List products catalog
+      operationId: listProducts
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: minPricePaise
+          in: query
+          schema:
+            type: integer
+        - name: maxPricePaise
+          in: query
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [PRICE_ASC, PRICE_DESC, NEWEST, POPULARITY]
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of products with cursor pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - nextCursor
+                  - hasMore
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  nextCursor:
+                    type: string
+                    nullable: true
+                  hasMore:
+                    type: boolean
+
+  /v1/products/{id}:
+    get:
+      summary: Get product details
+      operationId: getProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed product object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/search/suggest:
+    get:
+      summary: Get search suggestions
+      operationId: searchSuggest
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Matching queries and products
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - suggestions
+                  - products
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Folex Watch", "Folex Submariner"]
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /v1/drops:
+    get:
+      summary: List all drops
+      operationId: listDrops
+      responses:
+        '200':
+          description: List of active, upcoming, and past drops
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - active
+                  - upcoming
+                  - ended
+                properties:
+                  active:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Drop'
+                  upcoming:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Drop'
+                  ended:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Drop'
+
+  /v1/drops/{id}:
+    get:
+      summary: Get drop details
+      operationId: getDrop
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed drop information with items and inventory status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DropDetail'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/wishlist:
+    get:
+      summary: Get user wishlist
+      operationId: getWishlist
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Wishlisted items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /v1/wishlist/{productId}:
+    put:
+      summary: Add item to wishlist
+      operationId: addToWishlist
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Added to wishlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+    delete:
+      summary: Remove item from wishlist
+      operationId: removeFromWishlist
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Removed from wishlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/addresses:
+    get:
+      summary: List user addresses
+      operationId: listAddresses
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Saved user addresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+    post:
+      summary: Create new address
+      operationId: createAddress
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressInput'
+      responses:
+        '201':
+          description: Address created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+  /v1/addresses/{id}:
+    get:
+      summary: Get address by ID
+      operationId: getAddress
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Address details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+    patch:
+      summary: Update address
+      operationId: updateAddress
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressInput'
+      responses:
+        '200':
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+    delete:
+      summary: Delete address
+      operationId: deleteAddress
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Address deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/bag/quote:
+    post:
+      summary: Get validated price quote for bag items
+      description: Server calculates all prices, delivery fees, taxes, and totals in paise. Does not persist orders.
+      operationId: quoteBag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - variantId
+                      - quantity
+                    properties:
+                      variantId:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+                couponCode:
+                  type: string
+                addressId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Validated quote in paise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BagQuoteResponse'
+
+  /v1/orders:
+    post:
+      summary: Create new order
+      description: Atomically validates live drops, limits, reserves stock, and creates order in PENDING_PAYMENT or PLACED status.
+      operationId: createOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderInput'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      summary: List user orders
+      operationId: listOrders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: User order history
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - hasMore
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  nextCursor:
+                    type: string
+                    nullable: true
+                  hasMore:
+                    type: boolean
+
+  /v1/orders/{id}:
+    get:
+      summary: Get order details
+      operationId: getOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/orders/{id}/timeline:
+    get:
+      summary: Get order tracking timeline
+      operationId: getOrderTimeline
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - orderId
+                  - currentStatus
+                  - events
+                properties:
+                  orderId:
+                    type: string
+                    format: uuid
+                  currentStatus:
+                    $ref: '#/components/schemas/OrderStatus'
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderEvent'
+
+  /v1/orders/{id}/cancel:
+    post:
+      summary: Cancel order
+      operationId: cancelOrder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: "Changed my mind"
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/orders/{id}/payment:
+    post:
+      summary: Initiate payment intent
+      operationId: initiatePayment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+              properties:
+                provider:
+                  type: string
+                  enum: [RAZORPAY, FAKE]
+                  example: "RAZORPAY"
+      responses:
+        '200':
+          description: Payment gateway parameters for app SDK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+
+  /v1/webhooks/payments/{provider}:
+    post:
+      summary: Payment gateway webhook callback
+      operationId: handlePaymentWebhook
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [razorpay, fake]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/webhooks/couriers/{provider}:
+    post:
+      summary: Courier fulfillment status webhook
+      operationId: handleCourierWebhook
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "delhivery"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Courier status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/vault:
+    get:
+      summary: Get user rewards Vault status
+      operationId: getVaultStatus
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Vault stats including streak, gems, tier, savings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VaultStatus'
+
+  /v1/rewards/odds:
+    get:
+      summary: Get active reward probability odds
+      description: Returns exact versioned reward config currently active on the server.
+      operationId: getRewardOdds
+      responses:
+        '200':
+          description: Active reward configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardConfig'
+
+  /v1/rewards/{grantId}/open:
+    post:
+      summary: Open a reward grant
+      operationId: openRewardGrant
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: grantId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Opened reward outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardOutcomeResponse'
+
+  /v1/vault/redeem:
+    post:
+      summary: Redeem gems for discount or perk
+      operationId: redeemGems
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - gemsCount
+                - redemptionType
+              properties:
+                gemsCount:
+                  type: integer
+                  minimum: 100
+                  example: 500
+                redemptionType:
+                  type: string
+                  enum: [DISCOUNT_VOUCHER, EXCLUSIVE_DROP_ACCESS]
+                  example: "DISCOUNT_VOUCHER"
+      responses:
+        '200':
+          description: Gem redemption result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - voucherCode
+                  - remainingGems
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  voucherCode:
+                    type: string
+                    example: "GEM-SAVE-500-PAISE"
+                  remainingGems:
+                    type: integer
+                    example: 250
+
+  /v1/admin/products:
+    post:
+      summary: Create new product (Admin)
+      operationId: adminCreateProduct
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductInput'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /v1/admin/drops:
+    post:
+      summary: Create new drop event (Admin)
+      operationId: adminCreateDrop
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDropInput'
+      responses:
+        '201':
+          description: Drop created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drop'
+
+  /v1/admin/inventory/adjust:
+    post:
+      summary: Adjust variant inventory (Admin)
+      operationId: adminAdjustInventory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variantId
+                - onHandDelta
+                - reason
+              properties:
+                variantId:
+                  type: string
+                  format: uuid
+                onHandDelta:
+                  type: integer
+                  example: 50
+                reason:
+                  type: string
+                  example: "Initial drop stock arrival"
+      responses:
+        '200':
+          description: Inventory adjusted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/audit-logs:
+    get:
+      summary: View administrative audit log
+      operationId: adminGetAuditLogs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Audit log list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+
+  responses:
+    ErrorResponse:
+      description: Standardized error response format
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            code: "OUT_OF_STOCK"
+            message: "The requested item variant is out of stock"
+            requestId: "f42bc453-c854-428c-8fa6-af2c691cd949"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - uptime
+      properties:
+        status:
+          type: string
+          example: "ok"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-10-21T17:00:00.000Z"
+        uptime:
+          type: number
+          example: 123.45
+
+    ConfigResponse:
+      type: object
+      required:
+        - minAppVersion
+        - featureFlags
+      properties:
+        minAppVersion:
+          type: string
+          example: "1.0.0"
+        featureFlags:
+          type: object
+          required:
+            - rewardsEnabled
+            - codEnabled
+          properties:
+            rewardsEnabled:
+              type: boolean
+              example: true
+            codEnabled:
+              type: boolean
+              example: true
+
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+        - requestId
+      properties:
+        code:
+          type: string
+          example: "OUT_OF_STOCK"
+        message:
+          type: string
+          example: "Selected variant is currently out of stock."
+        details:
+          type: object
+          nullable: true
+        requestId:
+          type: string
+          example: "a9fa8bdd-f401-4f67-a46a-9269a784f811"
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+
+    AuthTokenResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresInSeconds
+        - user
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        expiresInSeconds:
+          type: integer
+          example: 900
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      required:
+        - id
+        - phone
+        - phoneVerified
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+919876543210"
+        phoneVerified:
+          type: boolean
+          example: true
+        name:
+          type: string
+          nullable: true
+          example: "Aarav Sharma"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "aarav@example.com"
+        createdAt:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Watches"
+        slug:
+          type: string
+          example: "watches"
+        imageUrl:
+          type: string
+          nullable: true
+
+    ProductVariant:
+      type: object
+      required:
+        - id
+        - sku
+        - size
+        - pricePaise
+        - mrpPaise
+        - inStock
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+          example: "FOL-SUB-BLK-40"
+        size:
+          type: string
+          example: "40mm"
+        pricePaise:
+          type: integer
+          description: Price in paise (BIGINT)
+          example: 499900
+        mrpPaise:
+          type: integer
+          description: MRP in paise (BIGINT)
+          example: 999900
+        inStock:
+          type: boolean
+          example: true
+
+    Product:
+      type: object
+      required:
+        - id
+        - brand
+        - title
+        - slug
+        - startingPricePaise
+        - images
+      properties:
+        id:
+          type: string
+          format: uuid
+        brand:
+          type: string
+          example: "Folex"
+        title:
+          type: string
+          example: "Folex Submariner Gold"
+        slug:
+          type: string
+          example: "folex-submariner-gold"
+        startingPricePaise:
+          type: integer
+          example: 499900
+        images:
+          type: array
+          items:
+            type: string
+            example: "https://cdn.dropzero.in/products/folex-1.jpg"
+
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          required:
+            - description
+            - variants
+            - category
+          properties:
+            description:
+              type: string
+              example: "Satirical parity luxury timepiece crafted with stainless steel finish."
+            category:
+              $ref: '#/components/schemas/Category'
+            variants:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductVariant'
+
+    Drop:
+      type: object
+      required:
+        - id
+        - title
+        - startsAt
+        - endsAt
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Drop 001: Cyber Folex Edition"
+        bannerUrl:
+          type: string
+          nullable: true
+        startsAt:
+          type: string
+          format: date-time
+          example: "2026-10-21T18:00:00.000Z"
+        endsAt:
+          type: string
+          format: date-time
+          example: "2026-10-21T21:00:00.000Z"
+        status:
+          type: string
+          enum: [UPCOMING, LIVE, ENDED]
+          example: "LIVE"
+
+    DropDetail:
+      allOf:
+        - $ref: '#/components/schemas/Drop'
+        - type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                required:
+                  - product
+                  - variant
+                  - allocation
+                  - remaining
+                  - perUserLimit
+                properties:
+                  product:
+                    $ref: '#/components/schemas/Product'
+                  variant:
+                    $ref: '#/components/schemas/ProductVariant'
+                  allocation:
+                    type: integer
+                    example: 50
+                  remaining:
+                    type: integer
+                    example: 12
+                  perUserLimit:
+                    type: integer
+                    example: 1
+
+    Address:
+      type: object
+      required:
+        - id
+        - name
+        - phone
+        - line1
+        - city
+        - state
+        - pincode
+        - isDefault
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Aarav Sharma"
+        phone:
+          type: string
+          example: "+919876543210"
+        line1:
+          type: string
+          example: "Flat 402, Skyline Heights"
+        line2:
+          type: string
+          nullable: true
+          example: "MG Road, Sector 14"
+        city:
+          type: string
+          example: "Gurugram"
+        state:
+          type: string
+          example: "Haryana"
+        pincode:
+          type: string
+          example: "122001"
+        isDefault:
+          type: boolean
+          example: true
+
+    CreateAddressInput:
+      type: object
+      required:
+        - name
+        - phone
+        - line1
+        - city
+        - state
+        - pincode
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        pincode:
+          type: string
+        isDefault:
+          type: boolean
+          default: false
+
+    UpdateAddressInput:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        pincode:
+          type: string
+        isDefault:
+          type: boolean
+
+    BagQuoteResponse:
+      type: object
+      required:
+        - subtotalPaise
+        - discountPaise
+        - shippingFeePaise
+        - taxPaise
+        - totalPaise
+        - items
+      properties:
+        subtotalPaise:
+          type: integer
+          example: 499900
+        discountPaise:
+          type: integer
+          example: 0
+        shippingFeePaise:
+          type: integer
+          example: 0
+        taxPaise:
+          type: integer
+          example: 89982
+        totalPaise:
+          type: integer
+          example: 589882
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - variantId
+              - quantity
+              - unitPricePaise
+              - totalPricePaise
+              - available
+            properties:
+              variantId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+              unitPricePaise:
+                type: integer
+              totalPricePaise:
+                type: integer
+              available:
+                type: boolean
+
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING_PAYMENT
+        - PLACED
+        - CONFIRMED
+        - PACKED
+        - SHIPPED
+        - OUT_FOR_DELIVERY
+        - DELIVERED
+        - CANCELLED
+      example: "PLACED"
+
+    CreateOrderInput:
+      type: object
+      required:
+        - items
+        - addressId
+        - deliveryOption
+        - paymentMethod
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - variantId
+              - quantity
+            properties:
+              variantId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+                minimum: 1
+        addressId:
+          type: string
+          format: uuid
+        deliveryOption:
+          type: string
+          enum: [STANDARD, EXPRESS]
+          example: "EXPRESS"
+        paymentMethod:
+          type: string
+          enum: [UPI, CARD, COD]
+          example: "UPI"
+
+    Order:
+      type: object
+      required:
+        - id
+        - status
+        - totalPaise
+        - paymentMethod
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalPaise:
+          type: integer
+          example: 589882
+        paymentMethod:
+          type: string
+          example: "UPI"
+        createdAt:
+          type: string
+          format: date-time
+        reservationExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    OrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          required:
+            - items
+            - address
+            - timeline
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                required:
+                  - variantId
+                  - productName
+                  - size
+                  - pricePaise
+                  - quantity
+                properties:
+                  variantId:
+                    type: string
+                    format: uuid
+                  productName:
+                    type: string
+                    example: "Folex Submariner Gold"
+                  size:
+                    type: string
+                    example: "40mm"
+                  pricePaise:
+                    type: integer
+                    example: 499900
+                  quantity:
+                    type: integer
+                    example: 1
+            address:
+              $ref: '#/components/schemas/Address'
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderEvent'
+
+    OrderEvent:
+      type: object
+      required:
+        - status
+        - at
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        at:
+          type: string
+          format: date-time
+        note:
+          type: string
+          nullable: true
+          example: "Order Dispatched from Delhi Hub"
+
+    PaymentIntentResponse:
+      type: object
+      required:
+        - paymentId
+        - provider
+        - amountPaise
+        - currency
+        - sdkPayload
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          example: "RAZORPAY"
+        amountPaise:
+          type: integer
+          example: 589882
+        currency:
+          type: string
+          example: "INR"
+        sdkPayload:
+          type: object
+          description: Parameters passed to client Razorpay SDK or Fake Gateway
+          example:
+            razorpayOrderId: "order_Kxyz123456"
+            keyId: "rzp_test_placeholder"
+
+    VaultStatus:
+      type: object
+      required:
+        - streakDays
+        - gemsBalance
+        - membershipTier
+        - estimatedSavingsPaise
+      properties:
+        streakDays:
+          type: integer
+          example: 5
+        gemsBalance:
+          type: integer
+          example: 1250
+        membershipTier:
+          type: string
+          enum: [MEMBER, SILVER, GOLD]
+          example: "SILVER"
+        estimatedSavingsPaise:
+          type: integer
+          example: 150000
+
+    RewardConfig:
+      type: object
+      required:
+        - version
+        - probabilities
+      properties:
+        version:
+          type: string
+          example: "v1.2"
+        probabilities:
+          type: array
+          items:
+            type: object
+            required:
+              - type
+              - weight
+            properties:
+              type:
+                type: string
+                enum: [GEMS_100, GEMS_500, CASHBACK_50_PAISE, EXCLUSIVE_BADGE, NO_REWARD]
+                example: "GEMS_500"
+              weight:
+                type: number
+                example: 0.25
+
+    RewardOutcomeResponse:
+      type: object
+      required:
+        - grantId
+        - outcomeType
+        - rewardValue
+        - openedAt
+      properties:
+        grantId:
+          type: string
+          format: uuid
+        outcomeType:
+          type: string
+          example: "GEMS_500"
+        rewardValue:
+          type: integer
+          example: 500
+        openedAt:
+          type: string
+          format: date-time
+
+    CreateProductInput:
+      type: object
+      required:
+        - brand
+        - title
+        - slug
+        - categoryId
+        - description
+      properties:
+        brand:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+    CreateDropInput:
+      type: object
+      required:
+        - title
+        - startsAt
+        - endsAt
+        - items
+      properties:
+        title:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - variantId
+              - allocation
+              - perUserLimit
+            properties:
+              variantId:
+                type: string
+                format: uuid
+              allocation:
+                type: integer
+              perUserLimit:
+                type: integer
+
+    AuditLogEntry:
+      type: object
+      required:
+        - id
+        - adminUserId
+        - action
+        - resource
+        - timestamp
+      properties:
+        id:
+          type: string
+          format: uuid
+        adminUserId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          example: "ADJUST_INVENTORY"
+        resource:
+          type: string
+          example: "variant:f42bc453-c854-428c-8fa6-af2c691cd949"
+        changes:
+          type: object
+        timestamp:
+          type: string
+          format: date-time

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: dropzero
+          POSTGRES_USER: dropzero
+          POSTGRES_PASSWORD: dropzero
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Type Check
+        run: npm run typecheck
+
+      - name: Validate OpenAPI Contract
+        run: npm run validate:openapi
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgres://dropzero:dropzero@localhost:5432/dropzero
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: super-secret-jwt-key-change-in-production-at-least-32-chars
+        run: npm run test
+
+      - name: Build Application
+        run: npm run build
