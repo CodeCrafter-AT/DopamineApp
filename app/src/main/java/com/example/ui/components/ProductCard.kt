@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.LuxuryProduct
 import com.example.ui.theme.AccentPurple
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.ui.theme.PureWhite
 import java.text.NumberFormat
 import java.util.Locale
@@ -92,8 +95,17 @@ fun LuxuryProductCard(
                     shape = RoundedCornerShape(16.dp)
                 )
         ) {
-            // High fashion vector product backdrop canvas
-            ProductVectorCanvas(category = product.category)
+            if (product.imageUrl != null) {
+                AsyncImage(
+                    model = product.imageUrl,
+                    contentDescription = product.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // High fashion vector product backdrop canvas fallback
+                ProductVectorCanvas(category = product.category)
+            }
 
             // VIP Drop Tag (Electric Purple Accent)
             Box(
@@ -172,14 +184,23 @@ fun LuxuryProductCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = formattedPrice,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground
+            Column {
+                Text(
+                    text = formattedPrice,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 )
-            )
+                Text(
+                    text = "or 3 months EMI of ${formatINR(product.priceInINR / 3)}",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                )
+            }
             Box(
                 modifier = Modifier
                     .background(
@@ -219,7 +240,7 @@ fun LuxuryProductCard(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "ADD TO CART →",
+                text = "SIMULATE PURCHASE →",
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
